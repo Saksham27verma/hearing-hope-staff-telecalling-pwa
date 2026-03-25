@@ -1,0 +1,185 @@
+.container {
+  min-height: 100dvh;
+  background: var(--hh-bg2);
+  display: flex;
+  flex-direction: column;
+}
+
+.headerBar {
+  background: var(--hh-card);
+  box-shadow: 0 2px 12px rgba(15, 23, 42, 0.06);
+  padding-bottom: 0.75rem;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 1rem 1.25rem 0.75rem;
+}
+
+.greeting {
+  font-size: 0.85rem;
+  color: var(--hh-teal);
+  font-weight: 600;
+  margin-bottom: 0.15rem;
+}
+
+.title {
+  font-size: 1.375rem;
+  font-weight: 700;
+  color: var(--hh-text);
+  letter-spacing: -0.02em;
+}
+
+.logoutBtn {
+  background: none;
+  border: none;
+  color: var(--hh-teal);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.35rem;
+  min-height: 44px;
+}
+
+.searchWrap {
+  position: relative;
+  margin: 0 1.25rem;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--hh-muted);
+  pointer-events: none;
+}
+
+.search {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.75rem 0.75rem 0.75rem 2.5rem;
+  border-radius: var(--hh-r-md);
+  border: 1px solid var(--hh-border);
+  font-size: 1rem;
+  background: var(--hh-bg2);
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 1rem 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.card {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  text-align: left;
+  padding: 1rem 1rem;
+  border-radius: var(--hh-r-lg);
+  border: 1px solid var(--hh-border);
+  background: var(--hh-card);
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
+  cursor: pointer;
+  min-height: 52px;
+}
+
+.cardMain {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.name {
+  font-weight: 700;
+  color: var(--hh-text);
+  font-size: 1.05rem;
+}
+
+.phone {
+  font-size: 0.9rem;
+  color: var(--hh-text2);
+}
+
+.meta {
+  font-size: 0.78rem;
+  color: var(--hh-muted);
+}
+
+.cardRight {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
+
+.badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+  background: rgba(13, 148, 136, 0.12);
+  color: var(--hh-teal);
+}
+
+.chev {
+  color: var(--hh-muted);
+}
+
+.centered,
+.empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  text-align: center;
+}
+
+.errorTitle {
+  font-weight: 700;
+  color: var(--hh-text);
+  margin-bottom: 0.35rem;
+}
+
+.errorText {
+  color: var(--hh-text2);
+  font-size: 0.9rem;
+}
+
+.emptyTitle {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--hh-text);
+}
+
+.emptyText {
+  color: var(--hh-text2);
+  font-size: 0.9rem;
+  margin-top: 0.35rem;
+}
+
+.spinner {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 3px solid var(--hh-border);
+  border-top-color: var(--hh-teal);
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
