@@ -5,7 +5,7 @@ import type { User } from 'firebase/auth';
 import { auth } from './firebase';
 import { useAuthUser } from './hooks/useAuthUser';
 import { EnquiriesProvider } from './context/EnquiriesContext';
-import { setupPushNotifications } from './services/pushNotifications';
+import { clearPushRegistration, setupPushNotifications } from './services/pushNotifications';
 import AppShell from './components/AppShell';
 import LoginScreen from './screens/LoginScreen';
 import AppointmentsScreen from './screens/AppointmentsScreen';
@@ -39,6 +39,8 @@ export default function App() {
   }, [user]);
 
   const handleLogout = () => {
+    const uid = auth.currentUser?.uid;
+    if (uid) void clearPushRegistration(uid);
     void signOut(auth);
   };
 

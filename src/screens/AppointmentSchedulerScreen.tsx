@@ -20,6 +20,7 @@ import {
   query,
   serverTimestamp,
   updateDoc,
+  deleteField,
 } from 'firebase/firestore';
 import { endOfDay, startOfDay } from 'date-fns';
 import type { AppShellOutletContext } from '../components/AppShell';
@@ -324,7 +325,11 @@ export default function AppointmentSchedulerScreen() {
       const payload = buildPayload(draft);
 
       if (isEditMode && editingId) {
-        await updateDoc(doc(db, 'appointments', editingId), payload as Record<string, unknown>);
+        const prev = appointments.find((a) => a.id === editingId);
+        const startChanged = Boolean(prev && prev.start !== draft.start);
+        const patch: Record<string, unknown> = { ...(payload as Record<string, unknown>) };
+        if (startChanged) patch.pwaReminderSentForStart = deleteField();
+        await updateDoc(doc(db, 'appointments', editingId), patch);
       } else {
         await addDoc(collection(db, 'appointments'), {
           ...payload,
@@ -429,6 +434,7 @@ export default function AppointmentSchedulerScreen() {
         start: newStart.toISOString(),
         end: newEnd.toISOString(),
         updatedAt: serverTimestamp(),
+        pwaReminderSentForStart: deleteField(),
       });
       setRescheduleOpen(false);
       setOpenPreview(false);

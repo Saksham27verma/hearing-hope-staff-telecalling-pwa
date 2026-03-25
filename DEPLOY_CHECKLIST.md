@@ -17,6 +17,13 @@ Do these in order once per environment.
 | `VITE_FIREBASE_STORAGE_BUCKET` | |
 | `VITE_FIREBASE_MESSAGING_SENDER_ID` | |
 | `VITE_FIREBASE_APP_ID` | |
+| `VITE_FIREBASE_VAPID_KEY` | Firebase → Project settings → Cloud Messaging → Web Push certificates (key pair) — required for PWA notifications |
+
+### CRM (deployed backend) for reminders + notification links
+
+- [ ] **`CRON_SECRET`** — random string; Vercel sends `Authorization: Bearer <CRON_SECRET>` to the cron route (see CRM `vercel.json`).
+- [ ] **`STAFF_TELECALLING_PWA_URL`** — public URL of this PWA (no trailing slash), e.g. `https://hearing-hope-staff-telecalling-pwa.vercel.app`, so push notifications can deep-link to `/app`.
+- [ ] Redeploy **CRM** after adding `vercel.json` crons so **start-time reminders** run every 5 minutes.
 
 - [ ] **Redeploy** after any env change (client env is baked at build time; proxy reads server env at runtime).
 

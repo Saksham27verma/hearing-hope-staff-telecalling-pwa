@@ -15,7 +15,7 @@ When you **turn off** the permissive `match /{document=**}` rule in production, 
 
 - Read/write **all appointments** (scheduler), read/update **enquiries** (follow-ups), read **centers**, read **all staff** (dropdowns), per **`firestore.rules`** in this repo.
 
-**Not included vs native:** No Expo-style push on web (optional FCM + VAPID later).
+**PWA push (FCM Web):** After login, the app asks for notification permission and registers **Firebase Cloud Messaging** (needs **`VITE_FIREBASE_VAPID_KEY`**). Tokens are stored on **`staff/{uid}.fcmWebPushTokens`**. The **CRM** sends web pushes when a **new appointment** is created (same API as Expo) and runs a **Vercel cron** every 5 minutes for **start-time reminders** (see CRM `vercel.json` and env **`CRON_SECRET`**). Set **`STAFF_TELECALLING_PWA_URL`** on the CRM (e.g. `https://your-telecalling-pwa.vercel.app`) so notification taps open the app.
 
 ## Setup
 

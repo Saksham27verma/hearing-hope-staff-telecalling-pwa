@@ -15,6 +15,9 @@ dist-ssr
 .env.*
 !.env.example
 
+# Generated from env at dev/build time (see vite-plugin-fcm-sw.ts)
+public/firebase-messaging-sw.js
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
