@@ -575,6 +575,14 @@
   margin: 0 0 0.25rem;
 }
 
+.hint {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--hh-text2);
+  margin: -0.1rem 0 0.35rem;
+  line-height: 1.35;
+}
+
 .value {
   margin: 0 0 0.85rem;
   font-size: 0.95rem;

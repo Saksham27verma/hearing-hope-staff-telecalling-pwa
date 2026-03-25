@@ -320,6 +320,7 @@ export default function AppointmentSchedulerScreen() {
       if (!draft.patientName?.trim()) throw new Error('Select a patient from enquiries');
       if (draft.type === 'center' && !draft.centerId) throw new Error('Select a center');
       if (draft.type === 'center' && !draft.assignedStaffId) throw new Error('Select staff for center visit');
+      if (draft.type === 'home' && !draft.centerId) throw new Error('Select which center this home visit is for');
       if (draft.type === 'home' && !draft.homeVisitorStaffId) throw new Error('Select staff for home visit');
 
       const payload = buildPayload(draft);
@@ -789,6 +790,8 @@ export default function AppointmentSchedulerScreen() {
                 </>
               ) : (
                 <>
+                  <p className={styles.label}>Center</p>
+                  <p className={styles.value}>{previewCenterName || previewAppt.centerName || '—'}</p>
                   <p className={styles.label}>Address</p>
                   <p className={styles.value}>{previewAppt.address || '—'}</p>
                   <p className={styles.label}>Home visit by</p>
@@ -993,6 +996,22 @@ export default function AppointmentSchedulerScreen() {
                   </>
                 ) : (
                   <>
+                    <label className={styles.field}>
+                      <span className={styles.label}>Center</span>
+                      <span className={styles.hint}>Which center this home visit is under</span>
+                      <select
+                        className={styles.input}
+                        value={draft.centerId}
+                        onChange={(ev) => setDraft((p) => ({ ...p, centerId: ev.target.value }))}
+                      >
+                        <option value="">Select…</option>
+                        {centers.map((c) => (
+                          <option key={c.id} value={c.id}>
+                            {c.name}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
                     <label className={styles.field}>
                       <span className={styles.label}>Home address</span>
                       <input
