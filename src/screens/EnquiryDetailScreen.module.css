@@ -953,3 +953,129 @@
   cursor: pointer;
   min-height: 44px;
 }
+
+.receiptList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.receiptCard {
+  border-radius: var(--hh-r-lg);
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  padding: 0.95rem 1rem;
+  background: rgba(255, 255, 255, 0.75);
+}
+
+.receiptBooking {
+  border-color: rgba(25, 118, 210, 0.22);
+  background: rgba(25, 118, 210, 0.04);
+}
+
+.receiptTrial {
+  border-color: rgba(237, 108, 2, 0.24);
+  background: rgba(255, 152, 0, 0.06);
+}
+
+.receiptSale {
+  border-color: rgba(46, 125, 50, 0.22);
+  background: rgba(46, 125, 50, 0.05);
+}
+
+.receiptCardHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+}
+
+.receiptChip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: rgba(15, 23, 42, 0.08);
+  color: var(--hh-text);
+}
+
+.receiptBooking .receiptChip {
+  background: rgba(25, 118, 210, 0.15);
+  color: #1565c0;
+}
+
+.receiptTrial .receiptChip {
+  background: rgba(237, 108, 2, 0.15);
+  color: #e65100;
+}
+
+.receiptSale .receiptChip {
+  background: rgba(46, 125, 50, 0.15);
+  color: #2e7d32;
+}
+
+.receiptDate {
+  font-size: 0.78rem;
+  color: var(--hh-text2);
+}
+
+.receiptTitle {
+  margin: 0 0 0.25rem;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--hh-text);
+  line-height: 1.35;
+}
+
+.receiptMeta {
+  margin: 0 0 0.35rem;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--hh-text2);
+}
+
+.receiptVisitRef {
+  margin: 0 0 0.65rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--hh-text2);
+}
+
+.receiptActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.receiptBtn,
+.receiptBtnPrimary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  min-height: 44px;
+  padding: 0.45rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid rgba(15, 23, 42, 0.14);
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--hh-text);
+}
+
+.receiptBtn:disabled,
+.receiptBtnPrimary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.receiptBtnPrimary {
+  border-color: rgba(13, 148, 136, 0.35);
+  background: rgba(13, 148, 136, 0.12);
+  color: #0f766e;
+}

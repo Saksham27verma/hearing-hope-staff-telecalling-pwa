@@ -5,12 +5,15 @@ import {
   IoCall,
   IoCalendarOutline,
   IoDocumentTextOutline,
+  IoDownloadOutline,
+  IoEyeOutline,
   IoHomeOutline,
   IoMailOutline,
   IoNewspaperOutline,
   IoPerson,
   IoPhonePortraitOutline,
   IoReaderOutline,
+  IoReceiptOutline,
   IoShareSocialOutline,
   IoAdd,
 } from 'react-icons/io5';
@@ -36,6 +39,40 @@ import {
   hasValue,
 } from '../utils/enquiryProfileHelpers';
 import styles from './EnquiryDetailScreen.module.css';
+import {
+  downloadBookingReceiptPDF,
+  downloadTrialReceiptPDF,
+  generateBookingReceiptPDF,
+  generateTrialReceiptPDF,
+  openBookingReceiptPDF,
+  openTrialReceiptPDF,
+} from '../utils/receiptGenerator';
+import {
+  downloadEnquirySaleInvoicePDF,
+  enquiryVisitToInvoiceSalePayload,
+  generateInvoicePDF,
+  openEnquirySaleInvoicePDF,
+} from '../utils/pdfGenerator';
+
+function openPdfBlob(blob: Blob) {
+  const url = URL.createObjectURL(blob);
+  window.open(url, '_blank');
+  window.setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
+
+async function sharePdfBlob(blob: Blob, filename: string, title: string): Promise<boolean> {
+  try {
+    const name = filename.endsWith('.pdf') ? filename : `${filename}.pdf`;
+    const file = new File([blob], name, { type: 'application/pdf' });
+    if (navigator.canShare?.({ files: [file] })) {
+      await navigator.share({ files: [file], title });
+      return true;
+    }
+  } catch {
+    /* dismissed or unsupported */
+  }
+  return false;
+}
 
 function asRecord(e: Enquiry): Record<string, unknown> {
   return e as unknown as Record<string, unknown>;
@@ -104,6 +141,7 @@ export default function EnquiryDetailScreen() {
   const [appointments, setAppointments] = useState<Record<string, unknown>[]>([]);
   const [activeVisitTab, setActiveVisitTab] = useState(0);
   const [shareToast, setShareToast] = useState<string | null>(null);
+  const [receiptBusyKey, setReceiptBusyKey] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -144,6 +182,37 @@ export default function EnquiryDetailScreen() {
   }, [id]);
 
   const visits = useMemo(() => (raw ? getVisits(raw) : []), [raw]);
+
+  const bookingReceipts = useMemo(
+    () =>
+      visits
+        .map((visit: unknown, index: number) => ({ visit: visit as Record<string, unknown>, index }))
+        .filter(
+          ({ visit }) =>
+            Boolean(visit.hearingAidBooked) || (Number(visit.bookingAdvanceAmount) > 0)
+        ),
+    [visits]
+  );
+  const trialReceipts = useMemo(
+    () =>
+      visits
+        .map((visit: unknown, index: number) => ({ visit: visit as Record<string, unknown>, index }))
+        .filter(({ visit }) => Boolean(visit.trialGiven) || Boolean(visit.hearingAidTrial)),
+    [visits]
+  );
+  const saleInvoiceReceipts = useMemo(
+    () =>
+      visits
+        .map((visit: unknown, index: number) => ({ visit: visit as Record<string, unknown>, index }))
+        .filter(
+          ({ visit }) =>
+            (Boolean(visit.hearingAidSale) || Boolean(visit.purchaseFromTrial)) &&
+            ((Array.isArray(visit.products) && visit.products.length > 0) || hasValue(visit.salesAfterTax))
+        ),
+    [visits]
+  );
+  const hasReceipts =
+    bookingReceipts.length > 0 || trialReceipts.length > 0 || saleInvoiceReceipts.length > 0;
   const journeyStatus = useMemo(() => getEnquiryStatusMeta(raw), [raw]);
   const paySummary = useMemo(
     () => (raw ? getPaymentSummary(raw, visits) : { pendingAmount: 0, paymentStatus: 'pending' as const }),
@@ -246,6 +315,22 @@ export default function EnquiryDetailScreen() {
       done(url);
     } else {
       done('Set VITE_CRM_URL to copy a profile link');
+    }
+  };
+
+  const receiptCenterOpt = (v: Record<string, unknown>) =>
+    raw ? getCenterName(v, raw, centers) || undefined : undefined;
+
+  const withReceipt = async (key: string, fn: () => Promise<void>) => {
+    setReceiptBusyKey(key);
+    try {
+      await fn();
+    } catch (e) {
+      console.error(e);
+      setShareToast(e instanceof Error ? e.message : 'Could not generate PDF');
+      window.setTimeout(() => setShareToast(null), 3400);
+    } finally {
+      setReceiptBusyKey(null);
     }
   };
 
@@ -657,6 +742,235 @@ export default function EnquiryDetailScreen() {
                 ) : null}
               </div>
             ) : null}
+          </article>
+        ) : null}
+
+        {hasReceipts ? (
+          <article className={styles.card}>
+            <div className={styles.cardHead}>
+              <span className={styles.cardIcon} aria-hidden>
+                <IoReceiptOutline size={20} />
+              </span>
+              <div>
+                <h2 className={styles.cardTitle}>Receipts and invoices</h2>
+                <p className={styles.cardSub}>Same rules as CRM — view, download, or share the PDF on your phone</p>
+              </div>
+            </div>
+            <div className={styles.receiptList}>
+              {bookingReceipts.map(({ visit, index }) => {
+                const busy = receiptBusyKey?.startsWith(`br-${index}-`) ?? false;
+                const centerName = receiptCenterOpt(visit);
+                return (
+                  <div key={`br-${index}`} className={`${styles.receiptCard} ${styles.receiptBooking}`}>
+                    <div className={styles.receiptCardHead}>
+                      <span className={styles.receiptChip}>Booking</span>
+                      <span className={styles.receiptDate}>
+                        {String(visit.bookingDate || visit.visitDate || '—')}
+                      </span>
+                    </div>
+                    <p className={styles.receiptTitle}>
+                      Visit {index + 1}
+                      {centerName ? ` · ${centerName}` : ''}
+                    </p>
+                    <div className={styles.receiptActions}>
+                      <button
+                        type="button"
+                        className={styles.receiptBtn}
+                        disabled={busy}
+                        onClick={() =>
+                          void withReceipt(`br-${index}-v`, () =>
+                            openBookingReceiptPDF(enquiry as never, visit as never, { centerName })
+                          )
+                        }
+                      >
+                        <IoEyeOutline size={18} />
+                        View
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.receiptBtn}
+                        disabled={busy}
+                        onClick={() =>
+                          void withReceipt(`br-${index}-d`, () =>
+                            downloadBookingReceiptPDF(enquiry as never, visit as never, undefined, { centerName })
+                          )
+                        }
+                      >
+                        <IoDownloadOutline size={18} />
+                        Save
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.receiptBtnPrimary}
+                        disabled={busy}
+                        onClick={() =>
+                          void withReceipt(`br-${index}-s`, async () => {
+                            const blob = await generateBookingReceiptPDF(enquiry as never, visit as never, {
+                              centerName,
+                            });
+                            const shared = await sharePdfBlob(
+                              blob,
+                              `booking-receipt-visit-${index + 1}.pdf`,
+                              'Booking receipt'
+                            );
+                            if (!shared) openPdfBlob(blob);
+                          })
+                        }
+                      >
+                        <IoShareSocialOutline size={18} />
+                        Share
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+
+              {trialReceipts.map(({ visit, index }) => {
+                const busy = receiptBusyKey?.startsWith(`tr-${index}-`) ?? false;
+                const centerName = receiptCenterOpt(visit);
+                return (
+                  <div key={`tr-${index}`} className={`${styles.receiptCard} ${styles.receiptTrial}`}>
+                    <div className={styles.receiptCardHead}>
+                      <span className={styles.receiptChip}>Trial</span>
+                      <span className={styles.receiptDate}>
+                        {String(visit.trialStartDate || visit.visitDate || '—')}
+                      </span>
+                    </div>
+                    <p className={styles.receiptTitle}>
+                      Visit {index + 1}
+                      {centerName ? ` · ${centerName}` : ''}
+                    </p>
+                    <div className={styles.receiptActions}>
+                      <button
+                        type="button"
+                        className={styles.receiptBtn}
+                        disabled={busy}
+                        onClick={() =>
+                          void withReceipt(`tr-${index}-v`, () =>
+                            openTrialReceiptPDF(enquiry as never, visit as never, { centerName })
+                          )
+                        }
+                      >
+                        <IoEyeOutline size={18} />
+                        View
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.receiptBtn}
+                        disabled={busy}
+                        onClick={() =>
+                          void withReceipt(`tr-${index}-d`, () =>
+                            downloadTrialReceiptPDF(enquiry as never, visit as never, undefined, { centerName })
+                          )
+                        }
+                      >
+                        <IoDownloadOutline size={18} />
+                        Save
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.receiptBtnPrimary}
+                        disabled={busy}
+                        onClick={() =>
+                          void withReceipt(`tr-${index}-s`, async () => {
+                            const blob = await generateTrialReceiptPDF(enquiry as never, visit as never, {
+                              centerName,
+                            });
+                            const shared = await sharePdfBlob(
+                              blob,
+                              `trial-receipt-visit-${index + 1}.pdf`,
+                              'Trial receipt'
+                            );
+                            if (!shared) openPdfBlob(blob);
+                          })
+                        }
+                      >
+                        <IoShareSocialOutline size={18} />
+                        Share
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+
+              {saleInvoiceReceipts.map(({ visit, index }) => {
+                const busy = receiptBusyKey?.startsWith(`inv-${index}-`) ?? false;
+                const payload = enquiryVisitToInvoiceSalePayload(enquiry, visit);
+                const productsLine =
+                  Array.isArray(visit.products) && visit.products.length > 0
+                    ? (visit.products as { name?: string; productName?: string }[])
+                        .map((p) => p.name || p.productName)
+                        .filter(Boolean)
+                        .join(', ') || 'Hearing aid sale'
+                    : 'Hearing aid sale';
+                return (
+                  <div key={`inv-${index}`} className={`${styles.receiptCard} ${styles.receiptSale}`}>
+                    <div className={styles.receiptCardHead}>
+                      <span className={styles.receiptChip}>Sales invoice</span>
+                      <span className={styles.receiptDate}>
+                        {String(visit.purchaseDate || visit.visitDate || '—')}
+                      </span>
+                    </div>
+                    <p className={styles.receiptTitle}>{productsLine}</p>
+                    <p className={styles.receiptMeta}>
+                      Total (incl. GST):{' '}
+                      {visit.salesAfterTax != null && visit.salesAfterTax !== ''
+                        ? `₹${Number(visit.salesAfterTax).toLocaleString('en-IN')}`
+                        : '—'}
+                      {visit.taxAmount != null && visit.taxAmount !== '' && Number(visit.taxAmount) > 0
+                        ? ` · Tax: ₹${Number(visit.taxAmount).toLocaleString('en-IN')}`
+                        : ''}
+                    </p>
+                    <p className={styles.receiptVisitRef}>Visit {index + 1}</p>
+                    <div className={styles.receiptActions}>
+                      <button
+                        type="button"
+                        className={styles.receiptBtn}
+                        disabled={busy}
+                        onClick={() =>
+                          void withReceipt(`inv-${index}-v`, () => openEnquirySaleInvoicePDF(enquiry, visit))
+                        }
+                      >
+                        <IoEyeOutline size={18} />
+                        View
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.receiptBtn}
+                        disabled={busy}
+                        onClick={() =>
+                          void withReceipt(`inv-${index}-d`, () =>
+                            downloadEnquirySaleInvoicePDF(enquiry, visit, `invoice-${payload.invoiceNumber}.pdf`)
+                          )
+                        }
+                      >
+                        <IoDownloadOutline size={18} />
+                        Save
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.receiptBtnPrimary}
+                        disabled={busy}
+                        onClick={() =>
+                          void withReceipt(`inv-${index}-s`, async () => {
+                            const blob = await generateInvoicePDF(payload);
+                            const shared = await sharePdfBlob(
+                              blob,
+                              `invoice-${payload.invoiceNumber}.pdf`,
+                              'Sales invoice'
+                            );
+                            if (!shared) openPdfBlob(blob);
+                          })
+                        }
+                      >
+                        <IoShareSocialOutline size={18} />
+                        Share
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </article>
         ) : null}
 
